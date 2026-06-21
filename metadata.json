@@ -1,0 +1,6 @@
+{
+  "name": "KaMar Mockup Studio",
+  "description": "Alat bantu pemasaran untuk menempatkan tampilan website undangan ke dalam bingkai handphone estetis untuk media sosial.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
