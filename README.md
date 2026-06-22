@@ -25,8 +25,9 @@ Aplikasi ini dilengkapi dengan filter interaktif, penyesuaian posisi screenshot,
    - Penggulung Gambar Latar Belakang (*Custom Background Image*) opsional.
    - **Efek Aura Glow (Lampu Pendar)**: Memberikan nuansa latar belakang premium modern yang menyala lembut di belakang smartphone.
 
-4. **Ekspor Resolusi Tinggi (UHD Export)**:
-   - Tombol **"Download Mockup Image"** otomatis merender seluruh kanvas dengan kerapatan piksel super tajam (multiplier skala 2.5x) menghasilkan file `.PNG` yang jernih, bebas pecah untuk dicetak maupun diposting langsung ke Story/Feeds.
+4. **Ekspor Resolusi Tinggi (UHD Export) & Transparansi**:
+   - **Download Full Mockup**: Otomatis merender seluruh kanvas beserta latar belakang/gradasi dengan kerapatan piksel super tajam (multiplier skala 2.5x) menghasilkan file `.PNG` berkualitas tinggi.
+   - **Download Tanpa Background (PNG)**: Mengabaikan seluruh dekorasi dan pendaran gradasi secara dinamis untuk mengekspor bingkai smartphone pernikahan dengan latar belakang transparan murni, sempurna untuk dipadukan kembali dengan aset desain poster eksternal lainnya!
 
 5. **Sistem Proteksi Keamanan Terintegrasi**:
    - Dilengkapi sistem pelapis anti rekayasa terbalik (*Anti-Reverse Engineering*). Mengamankan halaman agar **tidak dapat diklik kanan (*Disable Context Menu*)**, menonaktifkan tombol Inspeksi Elemen (`F12`, `Ctrl+Shift+I` / Mac `Cmd+Opt+I`, `Ctrl+Shift+C`, `Ctrl+Shift+J`), serta mematikan shortcut melihat kode sumber mentah (`Ctrl+U` / Mac `Cmd+Option+U`).

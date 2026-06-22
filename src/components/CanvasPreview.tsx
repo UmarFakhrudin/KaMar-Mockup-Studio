@@ -154,15 +154,15 @@ export const CanvasPreview: React.FC<CanvasPreviewProps> = ({
         {/* Subtle Aura Glow elements */}
         {showAuraGlow && (
           <>
-            <div className="absolute top-[-100px] left-[-100px] w-[350px] h-[350px] rounded-full bg-white/25 blur-[120px] pointer-events-none z-10" />
-            <div className="absolute bottom-[-100px] right-[-100px] w-[400px] h-[400px] rounded-full bg-black/15 blur-[100px] pointer-events-none z-10" />
+            <div className="canvas-decor-bg absolute top-[-100px] left-[-100px] w-[350px] h-[350px] rounded-full bg-white/25 blur-[120px] pointer-events-none z-10" />
+            <div className="canvas-decor-bg absolute bottom-[-100px] right-[-100px] w-[400px] h-[400px] rounded-full bg-black/15 blur-[100px] pointer-events-none z-10" />
             
             {/* Added floating beautiful shapes */}
             {bgType === 'preset' && selectedPreset.id === 'gold' && (
-              <div className="absolute top-[20%] right-[10%] w-[120px] h-[120px] rounded-full bg-amber-400/10 blur-[40px] pointer-events-none z-10" />
+              <div className="canvas-decor-bg absolute top-[20%] right-[10%] w-[120px] h-[120px] rounded-full bg-amber-400/10 blur-[40px] pointer-events-none z-10" />
             )}
             {bgType === 'preset' && selectedPreset.id === 'emerald' && (
-              <div className="absolute top-[30%] right-[15%] w-[150px] h-[150px] rounded-full bg-emerald-300/10 blur-[80px] pointer-events-none z-10" />
+              <div className="canvas-decor-bg absolute top-[30%] right-[15%] w-[150px] h-[150px] rounded-full bg-emerald-300/10 blur-[80px] pointer-events-none z-10" />
             )}
           </>
         )}

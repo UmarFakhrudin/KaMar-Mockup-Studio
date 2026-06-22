@@ -60,8 +60,9 @@ interface ControlPanelProps {
   statusBarTheme: 'light' | 'dark';
   setStatusBarTheme: (theme: 'light' | 'dark') => void;
   // Download trigger
-  onDownload: () => void;
+  onDownload: (transparent?: boolean) => void;
   isDownloading: boolean;
+  isTransparentDownloading: boolean;
 }
 
 export const ControlPanel: React.FC<ControlPanelProps> = ({
@@ -102,6 +103,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
   setStatusBarTheme,
   onDownload,
   isDownloading,
+  isTransparentDownloading,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const bgInputRef = useRef<HTMLInputElement>(null);
@@ -617,28 +619,49 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
         </div>
       </div>
 
-      {/* FOOTER & DOWNLOAD PROMOTIONAL BUTTON */}
-      <div className="pt-4 mt-auto">
+      {/* FOOTER & DOWNLOAD PROMOTIONAL BUTTONS */}
+      <div className="pt-4 mt-auto space-y-2.5">
         <button
-          onClick={onDownload}
-          disabled={isDownloading}
-          className={`w-full py-4 px-4 rounded-xl font-bold text-sm tracking-wide text-white bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 transition-all duration-350 flex items-center justify-center gap-2 text-center cursor-pointer select-none shadow-xl shadow-indigo-900/40 relative overflow-hidden ${
+          onClick={() => onDownload(false)}
+          disabled={isDownloading || isTransparentDownloading}
+          className={`w-full py-3.5 px-4 rounded-xl font-bold text-xs sm:text-sm tracking-wide text-white bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 transition-all duration-300 flex items-center justify-center gap-2 text-center cursor-pointer select-none shadow-xl shadow-indigo-900/40 relative overflow-hidden ${
             isDownloading ? 'opacity-70 cursor-not-allowed' : 'active:scale-98'
           }`}
         >
           {isDownloading ? (
             <>
-              <RefreshCw className="animate-spin" size={16} />
-              <span>Membuat Gambar...</span>
+              <RefreshCw className="animate-spin" size={15} />
+              <span>Membuat Gambar Mockup...</span>
             </>
           ) : (
             <>
-              <Download size={15} />
-              <span>Download Mockup Image</span>
+              <Download size={14} />
+              <span>Download Full Mockup</span>
             </>
           )}
         </button>
-        <p className="text-[9px] text-slate-500 text-center mt-2.5 uppercase tracking-wide">
+
+        <button
+          onClick={() => onDownload(true)}
+          disabled={isDownloading || isTransparentDownloading}
+          className={`w-full py-3 px-4 rounded-xl font-bold text-xs sm:text-sm tracking-wide text-slate-200 border border-slate-755 bg-slate-900/60 hover:bg-slate-900 transition-all duration-300 flex items-center justify-center gap-2 text-center cursor-pointer select-none relative overflow-hidden ${
+            isTransparentDownloading ? 'opacity-70 cursor-not-allowed' : 'active:scale-98'
+          }`}
+        >
+          {isTransparentDownloading ? (
+            <>
+              <RefreshCw className="animate-spin" size={15} />
+              <span>Membuat PNG Transparan...</span>
+            </>
+          ) : (
+            <>
+              <Layers size={14} className="text-indigo-400" />
+              <span>Download Tanpa Background (PNG)</span>
+            </>
+          )}
+        </button>
+
+        <p className="text-[9px] text-slate-500 text-center mt-1 uppercase tracking-wider">
           Ekspor beresolusi tinggi (Feed 800px / Story 1024px)
         </p>
       </div>

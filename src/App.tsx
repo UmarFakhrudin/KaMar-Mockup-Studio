@@ -46,6 +46,7 @@ export default function App() {
   const [showAuraGlow, setShowAuraGlow] = useState<boolean>(true);
   const [statusBarTheme, setStatusBarTheme] = useState<'light' | 'dark'>('dark');
   const [isDownloading, setIsDownloading] = useState<boolean>(false);
+  const [isTransparentDownloading, setIsTransparentDownloading] = useState<boolean>(false);
   const [currentTime, setCurrentTime] = useState<string>('09:41');
 
   // Sync real-time clock for status bars
@@ -129,35 +130,76 @@ export default function App() {
   };
 
   // Trigger high-definition screenshot download via html2canvas
-  const handleDownload = async () => {
-    setIsDownloading(true);
+  const handleDownload = async (transparent = false) => {
+    if (transparent) {
+      setIsTransparentDownloading(true);
+    } else {
+      setIsDownloading(true);
+    }
     const canvasRef = document.getElementById('promotional-canvas-work');
     if (!canvasRef) {
       setIsDownloading(false);
+      setIsTransparentDownloading(false);
       return;
     }
 
+    // Capture states of elements we want to temporarily modify
+    const originalTransform = canvasRef.style.transform;
+    const originalBackground = canvasRef.style.background;
+    const originalBgImage = canvasRef.style.backgroundImage;
+    const originalBoxShadow = canvasRef.style.boxShadow;
+    const originalBorderRadius = canvasRef.style.borderRadius;
+
+    // Find all background/glow elements to temporarily hide them
+    const decorElements = canvasRef.querySelectorAll('.canvas-decor-bg');
+    const originalDecorDisplays: string[] = [];
+
     try {
       // Temporarily remove CSS scale style on reference canvas before capture
-      const originalTransform = canvasRef.style.transform;
       canvasRef.style.transform = 'none';
 
-      // Capture on 2x multiplier for crisp, premium printing
+      if (transparent) {
+        // Enforce transparency on parent canvas
+        canvasRef.style.background = 'transparent';
+        canvasRef.style.backgroundImage = 'none';
+        canvasRef.style.boxShadow = 'none';
+        canvasRef.style.borderRadius = '0px';
+
+        decorElements.forEach((el) => {
+          const htmlEl = el as HTMLElement;
+          originalDecorDisplays.push(htmlEl.style.display);
+          htmlEl.style.display = 'none';
+        });
+      }
+
+      // Capture on 2.5x multiplier for crisp, premium printing
       const canvas = await html2canvas(canvasRef, {
         scale: 2.5,
         useCORS: true,
-        allowTaint: true,
-        backgroundColor: null,
+        allowTaint: false, // critical: allowTaint = false ensures toDataURL doesn't fail with SecurityError!
+        backgroundColor: null, // supports transparency
         logging: false,
       });
 
-      // Quick restore scaling transform
+      // Quick restore scaling transform and styles
       canvasRef.style.transform = originalTransform;
+      if (transparent) {
+        canvasRef.style.background = originalBackground;
+        canvasRef.style.backgroundImage = originalBgImage;
+        canvasRef.style.boxShadow = originalBoxShadow;
+        canvasRef.style.borderRadius = originalBorderRadius;
+
+        decorElements.forEach((el, index) => {
+          const htmlEl = el as HTMLElement;
+          htmlEl.style.display = originalDecorDisplays[index] || '';
+        });
+      }
 
       // Extract URI and prompt download
       const dataUri = canvas.toDataURL('image/png');
       const trigger = document.createElement('a');
-      trigger.download = `MockupPromosi_${layout}_${ratio === '1:1' ? 'Feed' : 'Story'}.png`;
+      const filenamePrefix = transparent ? 'MockupTransparan' : 'MockupPromosi';
+      trigger.download = `${filenamePrefix}_${layout}_${ratio === '1:1' ? 'Feed' : 'Story'}.png`;
       trigger.href = dataUri;
       document.body.appendChild(trigger);
       trigger.click();
@@ -165,8 +207,23 @@ export default function App() {
 
     } catch (e) {
       console.error('Error generating photo mockup download:', e);
+      // Fallback restore styles
+      if (canvasRef) {
+        canvasRef.style.transform = originalTransform;
+        if (transparent) {
+          canvasRef.style.background = originalBackground;
+          canvasRef.style.backgroundImage = originalBgImage;
+          canvasRef.style.boxShadow = originalBoxShadow;
+          canvasRef.style.borderRadius = originalBorderRadius;
+          decorElements.forEach((el, index) => {
+            const htmlEl = el as HTMLElement;
+            htmlEl.style.display = originalDecorDisplays[index] || '';
+          });
+        }
+      }
     } finally {
       setIsDownloading(false);
+      setIsTransparentDownloading(false);
     }
   };
 
@@ -248,6 +305,7 @@ export default function App() {
             setStatusBarTheme={setStatusBarTheme}
             onDownload={handleDownload}
             isDownloading={isDownloading}
+            isTransparentDownloading={isTransparentDownloading}
           />
         </section>
 

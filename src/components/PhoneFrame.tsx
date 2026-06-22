@@ -1,5 +1,5 @@
 import React from 'react';
-import { Wifi, Signal, Battery } from 'lucide-react';
+import { Wifi, Signal, Battery, Sparkles, Heart } from 'lucide-react';
 import { PhoneModel } from '../types';
 
 interface PhoneFrameProps {
@@ -127,17 +127,48 @@ export const PhoneFrame: React.FC<PhoneFrameProps> = ({
         {contentType === 'url' ? (
           iframeUrl ? (
             <div className="w-full h-full relative">
+              {/* Premium romantic fallback card printed when iframe is ignored during html2canvas capture */}
+              <div className="absolute inset-0 bg-[#fffdf9] flex flex-col items-center justify-between p-6 text-center z-0 border-4 border-[#eae0d5]/45 m-2 rounded-[32px] overflow-hidden font-sans">
+                {/* Vintage ornaments */}
+                <div className="flex items-center gap-1 text-[#b5838d] opacity-80 mt-2">
+                  <Sparkles size={10} />
+                  <span className="text-[9px] uppercase font-bold tracking-[0.2em]">The Wedding Invitation</span>
+                  <Sparkles size={10} />
+                </div>
+                
+                <div className="my-auto space-y-3 flex flex-col items-center">
+                  <Heart size={18} className="text-[#e5989b] fill-[#e5989b]/15 animate-pulse" />
+                  <div className="text-xl font-serif text-[#6d597a] tracking-normal font-bold leading-tight">
+                    {iframeUrl.includes('syukur-ega') ? 'Syukur & Ega' : 'Eka & Dwi'}
+                  </div>
+                  <div className="w-8 h-[1px] bg-[#e5989b]/60"></div>
+                  <p className="text-[10px] text-zinc-500 max-w-[170px] leading-relaxed font-sans font-medium">
+                    Kami mengundang Anda untuk merayakan momen bahagia pernikahan kami.
+                  </p>
+                  
+                  {/* Decorative badge */}
+                  <div className="mt-1 py-1 px-2.5 bg-[#f8f1eb] border border-[#e5989b]/35 rounded-full text-[8px] text-[#b5838d] uppercase font-bold tracking-widest flex items-center gap-1">
+                    <span>SAVE THE DATE</span>
+                  </div>
+                </div>
+
+                <div className="text-[8px] text-zinc-400 font-medium px-2 py-1 bg-zinc-50 border border-zinc-100 rounded-lg max-w-[180px] leading-tight">
+                  Ubah ke tab <strong>"Unggah Gambar"</strong> untuk tampilan 100% presisi.
+                </div>
+              </div>
+
               <iframe
                 id="preview-iframe"
                 title="Website Mockup View"
                 src={iframeUrl}
-                className="w-full h-full border-0 select-none bg-white"
+                data-html2canvas-ignore="true"
+                className="w-full h-full border-0 select-none bg-white z-10 relative"
                 style={{
                   pointerEvents: 'none',
                 }}
               />
               {/* Invisible touch overlay to prevent interaction messing with canvas */}
-              <div className="absolute inset-0 bg-transparent z-10 cursor-default" />
+              <div className="absolute inset-0 bg-transparent z-20 cursor-default" />
               
               {/* Tiny helpful text reminding frame usage */}
               <div className="absolute bottom-5 inset-x-4 bg-zinc-950/80 backdrop-blur-md text-white py-1.5 px-3 rounded-lg text-[9px] leading-snug text-center opacity-0 group-hover:opacity-100 transition duration-300 z-30">
@@ -155,6 +186,8 @@ export const PhoneFrame: React.FC<PhoneFrameProps> = ({
               <img
                 src={uploadedImage}
                 alt="Uploaded Screenshot"
+                crossOrigin="anonymous"
+                referrerPolicy="no-referrer"
                 className="w-full origin-top-left absolute"
                 style={{
                   transform: `scale(${imageZoom / 100})`,
