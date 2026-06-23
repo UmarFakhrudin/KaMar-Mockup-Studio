@@ -3,7 +3,9 @@ import { ControlPanel } from './components/ControlPanel';
 import { CanvasPreview } from './components/CanvasPreview';
 import { PhoneModel, LayoutPreset, CanvasRatio, BgType, BgPreset } from './types';
 import html2canvas from 'html2canvas';
-import { Laptop, Sparkles, Smartphone, Share2 } from 'lucide-react';
+import { Laptop, Sparkles, Smartphone, Share2, X, Download, Layers, ExternalLink, Check, Copy, Eye } from 'lucide-react';
+
+const DEFAULT_MOCKUP_IMAGE = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='900' viewBox='0 0 600 900'><rect width='100%' height='100%' fill='%23fffdf9'/><rect x='20' y='20' width='560' height='860' rx='15' fill='none' stroke='%23e5989b' stroke-width='2' stroke-dasharray='6 4'/><g transform='translate(300, 420)' text-anchor='middle'><circle cx='0' cy='-120' r='60' fill='%23faf0eb' stroke='%23e5989b' stroke-width='1'/><path d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z' fill='%23e5989b' transform='translate(-12, -132) scale(1.5)'/><text y='-20' font-family='serif' font-size='28' font-weight='bold' fill='%236d597a'>The Wedding of</text><text y='35' font-family='serif' font-size='40' font-weight='bold' fill='%23b5838d'>Raka %26 Amelia</text><text y='95' font-family='sans-serif' font-size='11' fill='%23888888' letter-spacing='3'>SAVE THE DATE</text><line x1='-100' y1='120' x2='100' y2='120' stroke='%23e5989b' stroke-width='1'/><text y='150' font-family='sans-serif' font-size='13' font-weight='bold' fill='%23555555'>SABTU, 12 DESEMBER 2026</text><text y='175' font-family='sans-serif' font-size='11' fill='%23999999'>Bandung, Jawa Barat</text></g></svg>";
 
 const BG_PRESETS: BgPreset[] = [
   { id: 'terracotta', name: 'Terracotta Boho', type: 'gradient', colors: ['#FAF0EB', '#E6D0C3'], cssClass: '' },
@@ -28,11 +30,15 @@ export default function App() {
   const [iframeUrl, setIframeUrl] = useState<string>('https://antigravity-example-invitation.neocities.org/');
   
   // Screenshot Upload state with a default beautiful floral mockup initial screen!
-  const [uploadedImage, setUploadedImage] = useState<string | null>(
-    'https://images.unsplash.com/photo-1607190074257-dd4b7af0309f?w=600&auto=format&fit=crop&q=80'
-  );
+  const [uploadedImage, setUploadedImage] = useState<string | null>(DEFAULT_MOCKUP_IMAGE);
   const [imageZoom, setImageZoom] = useState<number>(100);
   const [imageYOffset, setImageYOffset] = useState<number>(0);
+
+  // Download Dialog & Gallery status states
+  const [downloadedImageSrc, setDownloadedImageSrc] = useState<string | null>(null);
+  const [showDownloadModal, setShowDownloadModal] = useState<boolean>(false);
+  const [copySuccess, setCopySuccess] = useState<boolean>(false);
+  const [downloadType, setDownloadType] = useState<'normal' | 'transparent'>('normal');
 
   // Background control states
   const [bgType, setBgType] = useState<BgType>('preset');
@@ -154,6 +160,15 @@ export default function App() {
     const decorElements = canvasRef.querySelectorAll('.canvas-decor-bg');
     const originalDecorDisplays: string[] = [];
 
+    // Find and temporarily HIDE all cross-origin iframes so html2canvas doesn't crash or trigger security limitations!
+    const iframeElements = canvasRef.querySelectorAll('iframe');
+    const originalIframeDisplays: string[] = [];
+    iframeElements.forEach((iframe) => {
+      const htmlEl = iframe as HTMLElement;
+      originalIframeDisplays.push(htmlEl.style.display);
+      htmlEl.style.display = 'none';
+    });
+
     try {
       // Temporarily remove CSS scale style on reference canvas before capture
       canvasRef.style.transform = 'none';
@@ -183,6 +198,13 @@ export default function App() {
 
       // Quick restore scaling transform and styles
       canvasRef.style.transform = originalTransform;
+      
+      // Restore iframes
+      iframeElements.forEach((iframe, index) => {
+        const htmlEl = iframe as HTMLElement;
+        htmlEl.style.display = originalIframeDisplays[index] || '';
+      });
+
       if (transparent) {
         canvasRef.style.background = originalBackground;
         canvasRef.style.backgroundImage = originalBgImage;
@@ -195,8 +217,15 @@ export default function App() {
         });
       }
 
-      // Extract URI and prompt download
+      // Extract URI 
       const dataUri = canvas.toDataURL('image/png');
+      
+      // Store to open beautiful popup modal for maximum assurance (highly important in iframe sandboxes!)
+      setDownloadedImageSrc(dataUri);
+      setDownloadType(transparent ? 'transparent' : 'normal');
+      setShowDownloadModal(true);
+
+      // Programmatic direct download trigger attempt
       const trigger = document.createElement('a');
       const filenamePrefix = transparent ? 'MockupTransparan' : 'MockupPromosi';
       trigger.download = `${filenamePrefix}_${layout}_${ratio === '1:1' ? 'Feed' : 'Story'}.png`;
@@ -210,6 +239,13 @@ export default function App() {
       // Fallback restore styles
       if (canvasRef) {
         canvasRef.style.transform = originalTransform;
+        
+        // Restore iframes
+        iframeElements.forEach((iframe, index) => {
+          const htmlEl = iframe as HTMLElement;
+          htmlEl.style.display = originalIframeDisplays[index] || '';
+        });
+
         if (transparent) {
           canvasRef.style.background = originalBackground;
           canvasRef.style.backgroundImage = originalBgImage;
@@ -369,6 +405,137 @@ export default function App() {
           </a>
         </div>
       </footer>
+
+      {/* MOCKUP DOWNLOAD GALLERY MODAL */}
+      {showDownloadModal && downloadedImageSrc && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="bg-[#0f172a] border border-slate-800 rounded-3xl p-5 md:p-6 max-w-xl w-full shadow-2xl relative flex flex-col space-y-4 max-h-[90vh] overflow-y-auto">
+            
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="flex items-center gap-2">
+                <Sparkles size={18} className="text-indigo-400 animate-pulse" />
+                <div>
+                  <h3 className="text-sm md:text-base font-bold text-white leading-tight">
+                    Mockup Berhasil Dibuat!
+                  </h3>
+                  <p className="text-[10px] md:text-xs text-slate-400">
+                    {downloadType === 'transparent' ? 'Ekspor PNG Bingkai Transparan (High Definition)' : 'Ekspor Full Mockup Komplet (High Definition)'}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowDownloadModal(false)}
+                className="p-1 px-2 rounded-lg bg-slate-850 hover:bg-slate-800 hover:text-white text-slate-400 transition cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Generated Image Preview */}
+            <div className="relative group bg-[#020617] rounded-xl p-3 border border-slate-800 overflow-hidden flex items-center justify-center">
+              <img
+                src={downloadedImageSrc}
+                alt="Generated Mockup Preview"
+                className="max-h-[300px] object-contain rounded shadow-lg transition duration-200 hover:scale-[1.02] border border-slate-800"
+              />
+              <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition duration-200 pointer-events-none">
+                <div className="bg-slate-900/95 py-1.5 px-3 rounded-lg text-[10px] sm:text-xs font-semibold text-slate-200 border border-slate-850 flex items-center gap-1.5 shadow-xl">
+                  <Eye size={12} className="text-indigo-400" />
+                  <span>Render 2.5x Ultra Sharp</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Multi-safety Helpful Tips - INDONESIAN */}
+            <div className="bg-slate-900/60 border border-slate-850/80 rounded-2xl p-4 space-y-2 text-[11px] sm:text-xs text-slate-350">
+              <h4 className="font-bold text-slate-200 flex items-center gap-1.5 uppercase tracking-wider text-[10px] sm:text-xs">
+                💡 Cara Menyimpan Mockup:
+              </h4>
+              <ul className="list-disc pl-4 space-y-1 text-slate-400 text-[10px] sm:text-[11px] leading-relaxed">
+                <li>
+                  <strong className="text-indigo-400 font-semibold">Pengguna HP (Android/iOS):</strong> Tekan lama pada gambar di atas, lalu pilih menu <strong className="text-white">"Simpan Gambar"</strong> atau <strong className="text-white">"Tambah ke Foto"</strong>.
+                </li>
+                <li>
+                  <strong className="text-indigo-300 font-semibold">Pengguna Komputer / Laptop:</strong> Klik kanan pada gambar di atas, lalu pilih <strong className="text-white">"Simpan Gambar Sebagai..." (Save Image As...)</strong>.
+                </li>
+                <li>
+                  Gunakan tombol <strong className="text-white">"Salin"</strong> di bawah untuk langsung menempelkannya (paste) di Canva, Photoshop, WA, atau Telegram.
+                </li>
+              </ul>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+              <button
+                onClick={async () => {
+                  try {
+                    const response = await fetch(downloadedImageSrc);
+                    const blob = await response.blob();
+                    await navigator.clipboard.write([
+                      new ClipboardItem({ [blob.type]: blob })
+                    ]);
+                    setCopySuccess(true);
+                    setTimeout(() => setCopySuccess(false), 2000);
+                  } catch (err) {
+                    console.error('Gagal menyalin:', err);
+                  }
+                }}
+                className={`py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-1.5 transition duration-200 border cursor-pointer select-none ${
+                  copySuccess 
+                    ? 'bg-emerald-950/70 text-emerald-400 border-emerald-800' 
+                    : 'bg-slate-900 text-slate-200 border-slate-800 hover:bg-slate-850 hover:text-white'
+                }`}
+              >
+                {copySuccess ? (
+                  <>
+                    <Check size={14} className="text-emerald-400" />
+                    <span>Berhasil Disalin!</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy size={13} className="text-indigo-400" />
+                    <span>Salin Gambar (Copy)</span>
+                  </>
+                )}
+              </button>
+
+              <button
+                onClick={() => {
+                  const trigger = document.createElement('a');
+                  const filenamePrefix = downloadType === 'transparent' ? 'MockupTransparan' : 'MockupPromosi';
+                  trigger.download = `${filenamePrefix}_${layout}_${ratio === '1:1' ? 'Feed' : 'Story'}.png`;
+                  trigger.href = downloadedImageSrc;
+                  document.body.appendChild(trigger);
+                  trigger.click();
+                  document.body.removeChild(trigger);
+                }}
+                className="py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold text-white bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 flex items-center justify-center gap-1.5 transition duration-200 cursor-pointer select-none shadow-lg shadow-indigo-950/40"
+              >
+                <Download size={13} />
+                <span>Simpan File Otomatis</span>
+              </button>
+            </div>
+
+            {/* Hint to open raw image in a new window */}
+            <div className="text-center pt-1.5">
+              <button
+                onClick={() => {
+                  const newWindow = window.open();
+                  if (newWindow) {
+                    newWindow.document.write(`<body style="margin:0; background: #0c0d10; display:flex; justify-content:center; align-items:center; min-height:100vh;"><img src="${downloadedImageSrc}" style="max-width:100%; max-height:100vh; object-contain: fit;" /></body>`);
+                  }
+                }}
+                className="text-[10px] text-slate-500 hover:text-indigo-400 transition inline-flex items-center gap-1 cursor-pointer"
+              >
+                <ExternalLink size={10} />
+                <span>Buka Gambar Ukuran Penuh di Tab Baru ↗</span>
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
     </div>
   );
 }
